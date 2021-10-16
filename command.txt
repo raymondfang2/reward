@@ -1,0 +1,18 @@
+1. check flow
+flow list
+
+2. start IssueFlow
+start IssueMetal metalName: Gold, weight: 10, owner: "O=TraderA,L=New York,C=US"
+
+start IssueMetal customer: Raymond, point: 10, owner: "O=TraderA,L=New York,C=US"
+
+3. Transfer flow
+start TransferMetal metalName: Gold, weight: 10, newOwner: "O=TraderB,L=New York,C=US"
+
+start TransferMetal customer: Raymond, point: 10, newOwner: "O=TraderB,L=New York,C=US"
+
+4. query
+run vaultQuery contractStateType: com.template.states.MetalState
+
+5. QueryFlow
+start SearchVault
