@@ -27,22 +27,34 @@ public class NodeRPCConnection implements AutoCloseable {
     @Value("${config.rpc.password}")
     private String password;
     // The password for logging into the RPC client.
-    @Value("${config.rpc.port}")
-    private int rpcPort;
+    @Value("${config.bank.rpc.port}")
+    private int bankRpcPort;
 
-    private CordaRPCConnection rpcConnection;
-    CordaRPCOps proxy;
+    @Value("${config.user.rpc.port}")
+    private int userRpcPort;
+
+    private CordaRPCConnection bankRpcConnection;
+    CordaRPCOps bankProxy;
+
+    private CordaRPCConnection userRpcConnection;
+    CordaRPCOps userProxy;
 
     @PostConstruct
     public void initialiseNodeRPCConnection() {
-        NetworkHostAndPort rpcAddress = new NetworkHostAndPort(host, rpcPort);
+        NetworkHostAndPort rpcAddress = new NetworkHostAndPort(host, bankRpcPort);
         CordaRPCClient rpcClient = new CordaRPCClient(rpcAddress);
-        rpcConnection = rpcClient.start(username, password);
-        proxy = rpcConnection.getProxy();
+        bankRpcConnection = rpcClient.start(username, password);
+        bankProxy = bankRpcConnection.getProxy();
+
+        rpcAddress = new NetworkHostAndPort(host, userRpcPort);
+        rpcClient = new CordaRPCClient(rpcAddress);
+        userRpcConnection = rpcClient.start(username, password);
+        userProxy = bankRpcConnection.getProxy();
     }
 
     @PreDestroy
     public void close() {
-        rpcConnection.notifyServerAndClose();
+        bankRpcConnection.notifyServerAndClose();
+        userRpcConnection.notifyServerAndClose();
     }
 }
