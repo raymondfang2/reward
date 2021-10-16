@@ -1,5 +1,7 @@
 package com.template.webserver;
 
+import com.template.flows.IssueMetal;
+import com.template.flows.TransferMetal;
 import com.template.states.MetalState;
 import com.template.states.RedemptionState;
 import net.corda.core.contracts.StateAndRef;
@@ -11,9 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -25,10 +29,12 @@ public class Controller {
     private final CordaRPCOps bankProxy;
     private final CordaRPCOps userProxy;
     private final static Logger logger = LoggerFactory.getLogger(Controller.class);
+    private final NodeRPCConnection rpc;
 
     public Controller(NodeRPCConnection rpc) {
         this.bankProxy = rpc.bankProxy;
         this.userProxy = rpc.userProxy;
+        this.rpc = rpc;
     }
 
     @GetMapping(value = "/templateendpoint", produces = "text/plain")
@@ -47,53 +53,59 @@ public class Controller {
         return parties;
     }
 
+    //customer: Raymond, point: 10, owner: "O=User,L=New York,C=US"
     @GetMapping("/issue")
-    String startIssueFlow() {
-        List<NodeInfo> nodes = bankProxy.networkMapSnapshot();
-        NodeInfo spaceX = nodes.get(2);
-        Party owner = spaceX.getLegalIdentities().get(0);
-        for (int i=0; i< nodes.size(); i++) {
-            System.out.println("==========>"+nodes.get(i).toString());
-        }
+    String startIssueFlow(@RequestParam String customer, @RequestParam int point) {
+        bankProxy.startFlowDynamic(IssueMetal.class,customer,point, rpc.userParty);
 
        //proxy.startFlowDynamic(ShipmentFlow.class,"Cybertruck",owner);
-        return "Start....";
+        return "Start Reward workflow: "+ customer + " ==> " + point;
     }
 
+    //voucher: "NTUC $10", customer: Raymond, point: 10, newOwner: "O=Merchant,L=New York,C=US"
     @GetMapping("/redeem")
-    String startRedemptionFlow() {
-        List<NodeInfo> nodes = userProxy.networkMapSnapshot();
-        NodeInfo spaceX = nodes.get(2);
-        Party owner = spaceX.getLegalIdentities().get(0);
-        for (int i=0; i< nodes.size(); i++) {
-            System.out.println("==========>"+nodes.get(i).toString());
-        }
-
+    String startRedemptionFlow(@RequestParam String voucher, @RequestParam String customer, @RequestParam int point) {
+        userProxy.startFlowDynamic(TransferMetal.class,voucher, customer,point, rpc.merchantParty);
         //proxy.startFlowDynamic(ShipmentFlow.class,"Cybertruck",owner);
-        return "Start....";
+        return "Start Redemption Workflow: " + voucher + "Redeem using: " + customer + " ==> " + point;
     }
+
+    /*
+     private String customer;
+    private int point;
+     */
 
     @GetMapping("/getRewardState")
-    List<String> getRewardState() {
+    List<HashMap<String, String>> getRewardState() {
         Vault.Page<MetalState> pages = bankProxy.vaultQuery(com.template.states.MetalState.class);
         List<StateAndRef<MetalState>> states = pages.getStates();
-        List<String> result = new ArrayList<>(states.size());
+        List<HashMap<String, String>> result = new ArrayList<>(states.size());
         for (int i=0; i<states.size(); i++) {
-            result.add(states.get(i).getState().getData().getCustomer()
-                    +"=>"+states.get(i).getState().getData().getPoint());
+            String customer = states.get(i).getState().getData().getCustomer();
+            String point = ""+states.get(i).getState().getData().getPoint();
+            HashMap<String, String> rewardState = new HashMap<>();
+            rewardState.put("customer", customer);
+            rewardState.put("point", point);
+            result.add(rewardState);
         }
         return result;
     }
 
-
+    //voucher
     @GetMapping("/getRedemptionState")
-    List<String> getRedemptionState() {
+    List<HashMap<String, String>> getRedemptionState() {
         Vault.Page<RedemptionState> pages = bankProxy.vaultQuery(com.template.states.RedemptionState.class);
         List<StateAndRef<RedemptionState>> states = pages.getStates();
-        List<String> result = new ArrayList<>(states.size());
+        List<HashMap<String, String>> result = new ArrayList<>(states.size());
         for (int i=0; i<states.size(); i++) {
-            result.add(states.get(i).getState().getData().getCustomer()
-                    +"=>"+states.get(i).getState().getData().getPoint());
+            String voucher = states.get(i).getState().getData().getVoucher();
+            String customer = states.get(i).getState().getData().getCustomer();
+            String point = ""+states.get(i).getState().getData().getPoint();
+            HashMap<String, String> rewardState = new HashMap<>();
+            rewardState.put("voucher", voucher);
+            rewardState.put("customer", customer);
+            rewardState.put("point", point);
+            result.add(rewardState);
         }
         return result;
     }

@@ -2,13 +2,17 @@ package com.template.webserver;
 
 import net.corda.client.rpc.CordaRPCClient;
 import net.corda.client.rpc.CordaRPCConnection;
+import net.corda.core.identity.Party;
 import net.corda.core.messaging.CordaRPCOps;
+import net.corda.core.node.NodeInfo;
 import net.corda.core.utilities.NetworkHostAndPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Wraps an RPC connection to a Corda node.
@@ -39,6 +43,10 @@ public class NodeRPCConnection implements AutoCloseable {
     private CordaRPCConnection userRpcConnection;
     CordaRPCOps userProxy;
 
+    public Party bankParty;
+    public Party userParty;
+    public Party merchantParty;
+
     @PostConstruct
     public void initialiseNodeRPCConnection() {
         NetworkHostAndPort rpcAddress = new NetworkHostAndPort(host, bankRpcPort);
@@ -49,7 +57,23 @@ public class NodeRPCConnection implements AutoCloseable {
         rpcAddress = new NetworkHostAndPort(host, userRpcPort);
         rpcClient = new CordaRPCClient(rpcAddress);
         userRpcConnection = rpcClient.start(username, password);
-        userProxy = bankRpcConnection.getProxy();
+        userProxy = userRpcConnection.getProxy();
+
+        List<NodeInfo> nodes = bankProxy.networkMapSnapshot();
+        for (int i=0; i<nodes.size(); i++) {
+            Party currentParty = nodes.get(i).getLegalIdentities().get(0);
+            String partyName = currentParty.getName().getOrganisation();
+            if (partyName.equals("Bank")) {
+                bankParty = currentParty;
+            }
+            else if (partyName.equals("User")) {
+                userParty = currentParty;
+            }
+            else if (partyName.equals("Merchant")) {
+                merchantParty = currentParty;
+            }
+        }
+
     }
 
     @PreDestroy
