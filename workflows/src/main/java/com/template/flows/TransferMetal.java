@@ -3,6 +3,7 @@ package com.template.flows;
 import co.paralleluniverse.fibers.Suspendable;
 import com.template.contracts.MetalContract;
 import com.template.states.MetalState;
+import com.template.states.RedemptionState;
 import net.corda.core.contracts.Command;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.flows.*;
@@ -125,7 +126,13 @@ public class TransferMetal extends FlowLogic<SignedTransaction> {
         // Create transaction builder
         progressTracker.setCurrentStep(GENERATING_TRANSACTION);
         TransactionBuilder txB = new TransactionBuilder(notary);
+        //outputState for unburned point for User
         if (outputState!=null) txB.addOutputState(outputState, MetalContract.CID);
+
+        //outputState for Redemption
+        RedemptionState outputState2 = new RedemptionState("NTUC $10", customer, point, issuer, newOwner);
+        txB.addOutputState(outputState2);
+
         txB.addCommand(cmd);
 
         for (int i=0; i<inputStates.size(); i++) {
