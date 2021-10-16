@@ -18,8 +18,8 @@ public class RedemptionState implements ContractState {
     private String voucher; //Description of Voucher e.g. NTUC $10
     private String customer;
     private int point;
-    private Party issuer;
-    private Party owner;
+    private Party issuer; //Bank  ==> It seems the issuer will store
+    private Party owner;  //Merchant ==> It seems the owner will store
 
     public RedemptionState(String voucher, String customer, int point, Party issuer, Party owner) {
         this.voucher = voucher;

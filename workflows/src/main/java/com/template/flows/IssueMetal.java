@@ -5,6 +5,7 @@ import com.template.contracts.MetalContract;
 import com.template.states.MetalState;
 import net.corda.core.contracts.Command;
 import net.corda.core.flows.*;
+import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 import net.corda.core.transactions.SignedTransaction;
 import net.corda.core.transactions.TransactionBuilder;
@@ -25,6 +26,10 @@ public class IssueMetal extends FlowLogic<SignedTransaction> {
         this.customer = customer;
         this.point = point;
         this.owner = owner;
+        //O=Bank,L=London,C=GB
+        /*this.owner= getServiceHub().getNetworkMapCache()
+                .getNodeByLegalName(new CordaX500Name("Bank","London","GB"))
+                .getLegalIdentities().get(0);*/
     }
 
     private final ProgressTracker.Step RETRIEVING_NOTARY = new ProgressTracker.Step("Retrieving the Notary.");

@@ -7,6 +7,7 @@ import com.template.states.RedemptionState;
 import net.corda.core.contracts.Command;
 import net.corda.core.contracts.StateAndRef;
 import net.corda.core.flows.*;
+import net.corda.core.identity.CordaX500Name;
 import net.corda.core.identity.Party;
 import net.corda.core.node.services.Vault;
 import net.corda.core.node.services.vault.QueryCriteria;
@@ -24,15 +25,22 @@ import java.util.List;
 @StartableByRPC
 public class TransferMetal extends FlowLogic<SignedTransaction> {
 
+    private String voucher;
     private String customer;
     private int point;
     private Party newOwner;
     private int input = 0;
 
-    public TransferMetal(String customer, int point, Party newOwner) {
+    public TransferMetal(String voucher, String customer, int point, Party newOwner) {
+        this.voucher = voucher;
         this.customer = customer;
         this.point = point;
         this.newOwner = newOwner;
+        //O=Merchant,L=New York,C=US
+        /*
+        this.newOwner= getServiceHub().getNetworkMapCache()
+                .getNodeByLegalName(new CordaX500Name("Merchant","New York","US"))
+                .getLegalIdentities().get(0);*/
     }
 
     private final ProgressTracker.Step RETRIEVING_NOTARY = new ProgressTracker.Step("Retrieving the Notary.");
@@ -61,7 +69,11 @@ public class TransferMetal extends FlowLogic<SignedTransaction> {
         //Ok for gradle compilation, why IntelliJ complain?
         QueryCriteria generalCriteria = new QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED);
 
-
+        /*TODO: Get Party
+        Party p= getServiceHub().getNetworkMapCache()
+                .getNodeByLegalName(new CordaX500Name("mint","","GB"))
+                .getLegalIdentities().get(0);
+        */
         List<StateAndRef<MetalState>> MetalStates = getServiceHub().getVaultService().queryBy(MetalState.class, generalCriteria).getStates();
         List<StateAndRef<MetalState>> result = new ArrayList<>();
 
@@ -130,7 +142,7 @@ public class TransferMetal extends FlowLogic<SignedTransaction> {
         if (outputState!=null) txB.addOutputState(outputState, MetalContract.CID);
 
         //outputState for Redemption
-        RedemptionState outputState2 = new RedemptionState("NTUC $10", customer, point, issuer, newOwner);
+        RedemptionState outputState2 = new RedemptionState(voucher, customer, point, issuer, newOwner);
         txB.addOutputState(outputState2);
 
         txB.addCommand(cmd);

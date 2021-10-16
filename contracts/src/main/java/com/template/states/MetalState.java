@@ -18,8 +18,8 @@ public class MetalState implements ContractState {
 
     private String customer;
     private int point;
-    private Party issuer;
-    private Party owner;
+    private Party issuer; //Bank
+    private Party owner; //User
 
     public MetalState(String customer, int point, Party issuer, Party owner) {
         this.customer = customer;
