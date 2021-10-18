@@ -11,10 +11,7 @@ import net.corda.core.node.NodeInfo;
 import net.corda.core.node.services.Vault;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +20,7 @@ import java.util.List;
 /**
  * Define your API endpoints here.
  */
+@CrossOrigin
 @RestController
 @RequestMapping("/") // The paths for HTTP requests are relative to this base path.
 public class Controller {
@@ -67,7 +65,7 @@ public class Controller {
     String startRedemptionFlow(@RequestParam String voucher, @RequestParam String customer, @RequestParam int point) {
         userProxy.startFlowDynamic(TransferMetal.class,voucher, customer,point, rpc.merchantParty);
         //proxy.startFlowDynamic(ShipmentFlow.class,"Cybertruck",owner);
-        return "Start Redemption Workflow: " + voucher + "Redeem using: " + customer + " ==> " + point;
+        return "Start Redemption Workflow: " + voucher + " Redeem using: " + customer + " ==> " + point;
     }
 
     /*

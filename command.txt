@@ -5,6 +5,8 @@ flow list
 
 start IssueMetal customer: Raymond, point: 10, owner: "O=User,L=New York,C=US"
 
+start IssueMetal customer: Raymond, point: 10, owner: "O=Merchant,L=New York,C=US"
+
 3. Transfer flow
 
 start TransferMetal voucher: "NTUC $10", customer: Raymond, point: 10, newOwner: "O=Merchant,L=New York,C=US"
